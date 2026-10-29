@@ -348,7 +348,7 @@ details.hint > div { padding: 16px; display: grid; gap: 14px; }
     <nav class="nav" aria-label="主导航">
       <a href="#map" data-nav="map">星图</a>
       <a href="#exam" data-nav="exam">模拟考</a>
-      <a href="#guide" data-nav="guide">教师指南</a>
+      <a href="#guide" data-nav="guide">舰队手册</a>
     </nav>
     <span class="medalpill" id="medalpill" aria-live="polite"></span>
   </div>
@@ -502,7 +502,7 @@ function viewMap() {
     ${DEFAULT_SCHED.map((s, i) => `<div style="--sc:${SEG_COLOR[s.key]}"><b><i>${i + 1}</i>${s.label}</b><span>${s.min} 分钟 · ${SEG_HINT[s.key]}</span></div>`).join("")}
   </div>
 
-  <details class="fold" style="margin-top:28px"><summary>完整课程大纲 <small>老师备课用</small><span class="chev">${I.chev}</span></summary><div class="body"><div class="tablebox"><table>
+  <details class="fold" style="margin-top:28px"><summary>12 课一览 <small>每颗星球学什么</small><span class="chev">${I.chev}</span></summary><div class="body"><div class="tablebox"><table>
     <thead><tr><th>课次</th><th>星球</th><th>主题</th><th>对应考纲</th><th>闯关项目</th><th>AI 小剧场</th></tr></thead>
     <tbody>${L.map(l => `<tr><td class="num">${pad(l.id)}</td><td><a href="#p${l.id}"><span class="dotc" style="--c:${l.color}"></span>${l.planet}</a></td><td>${l.title}</td><td>${l.std.map(s => `(${s}) ${STD[s]}`).join("<br>")}</td><td>${l.project.name}</td><td>${l.ai.title}</td></tr>`).join("")}</tbody>
   </table></div></div></details>
@@ -646,7 +646,7 @@ const RENDER = {
       <div><span class="lbl">知识胶囊</span><div class="caps">${l.ai.know.map((t, i) => `<div class="cap" style="--sc:${["var(--cyan)", "var(--amber)", "var(--good)", "#B79CFF"][i % 4]}">${t}</div>`).join("")}</div></div>
       <div class="box"><span class="lbl">动手玩一玩</span>${checksHTML(l.ai.steps, "ai")}</div>
       <div class="box"><span class="lbl">小星考考你</span>${qHTML(l.ai.poll, { kind: false })}</div>
-      ${(l.ai.tools.length || l.ai.safety) ? `<details class="hint"><summary>${I.chev}老师准备：工具与安全提示</summary><div class="teacher">
+      ${(l.ai.tools.length || l.ai.safety) ? `<details class="hint"><summary>${I.chev}装备与安全提示</summary><div class="teacher">
         ${l.ai.tools.map(t => `<div><a href="${t.url}" target="_blank" rel="noopener">${t.name}</a><br>${t.note}</div>`).join("")}
         ${l.ai.safety ? `<div class="warn">${I.warn}<span>${l.ai.safety}</span></div>` : ""}</div></details>` : ""}
     </div>`,
@@ -812,39 +812,39 @@ function viewExam() {
   app.querySelectorAll(".selfscore input").forEach(inp => inp.addEventListener("input", calc));
 }
 
-// ---------- 教师指南 ----------
+// ---------- 舰队手册 ----------
 function viewGuide() {
   app.innerHTML = `<div class="narrow" style="margin:0 auto">
-    <span class="eyebrow">TEACHER'S MANUAL</span>
-    <h1 style="font-family:var(--f-display);font-size:clamp(32px,5vw,46px);margin-top:4px">教师指南</h1>
-    <p style="color:var(--dim);margin-top:6px">第 1–11 课每课 80 分钟，留 10 分钟机动；第 12 课 90 分钟。</p></div>
+    <span class="eyebrow">FLEET HANDBOOK</span>
+    <h1 style="font-family:var(--f-display);font-size:clamp(32px,5vw,46px);margin-top:4px">舰队手册</h1>
+    <p style="color:var(--dim);margin-top:6px">第 1–11 课每课 80 分钟，第 12 课 90 分钟。出发前先看看这份手册。</p></div>
     <div class="howto">${DEFAULT_SCHED.map((s, i) => `<div style="--sc:${SEG_COLOR[s.key]}"><b><i>${i + 1}</i>${s.label}</b><span>${s.min} 分钟 · ${SEG_HINT[s.key]}</span></div>`).join("")}</div>
     <div class="guide-grid" style="margin-top:14px">
-      <div class="box"><h3>上课怎么用这个网站</h3><ul>
-        <li>投屏打开对应星球，用顶部的环节条切换四个环节，计时器会跟着切换。</li>
-        <li>AI 小剧场里，点「小星，继续说」一句一句推进剧情，也可以点「读给我听」让浏览器朗读。</li>
-        <li>闯关项目的参考程序默认收起，先让学生自己尝试，卡住再展开。</li>
-        <li>考场演练一次一道题，学生举手抢答后老师点选，解析会立刻出现。</li></ul></div>
-      <div class="box"><h3>设备清单</h3><ul>
-        <li>每人一台电脑，安装 Scratch 3.0 离线版。</li>
+      <div class="box"><h3>怎么使用这个网站</h3><ul>
+        <li>在星图上点进一颗星球，用顶部的环节条切换四个环节，计时器会跟着切换。</li>
+        <li>AI 小剧场里，点「小星，继续说」听小星一句一句讲，也可以点「读给我听」。</li>
+        <li>闯关项目的参考程序默认收起，先自己试一试，卡住了再展开。</li>
+        <li>考场演练一次一道题，选完马上就能看到对错和解析。</li></ul></div>
+      <div class="box"><h3>需要的装备</h3><ul>
+        <li>一台电脑，安装好 Scratch 3.0 离线版。</li>
         <li>麦克风：第 6 课录音、第 7 课声控。</li>
         <li>摄像头：第 9 课视频侦测、第 10 课训练 AI 模型。</li>
         <li>联网：第 2 课的文字朗读、翻译扩展需要联网。</li>
-        <li>教师大屏 + 一个 AI 对话账号 + 一个文生图账号。</li></ul></div>
-      <div class="box"><h3>网络受限时的替代方案</h3><ul>
-        <li>Teachable Machine、AutoDraw 需要访问谷歌服务；可改用慧编程 mBlock 的「机器学习」扩展，或提前准备好素材。</li>
-        <li>AI 音乐由老师课前生成好，课上直接播放。</li>
-        <li>大模型对话可用 DeepSeek、豆包、Kimi 等国内产品，由老师操作。</li></ul></div>
+        <li>AI 对话和 AI 画图工具需要登录账号使用。</li></ul></div>
+      <div class="box"><h3>网站打不开怎么办</h3><ul>
+        <li>Teachable Machine、AutoDraw 需要访问谷歌服务；打不开时可以改用慧编程 mBlock 的「机器学习」扩展。</li>
+        <li>AI 音乐可以提前生成好，上课时直接播放。</li>
+        <li>AI 对话可以用 DeepSeek、豆包、Kimi 等国内产品。</li></ul></div>
       <div class="box"><h3>AI 安全公约</h3><ul>
         <li>不把姓名、学校、住址、电话、照片告诉 AI。</li>
         <li>AI 会说错话（AI 幻觉），重要信息要查证。</li>
         <li>作业和考试靠自己，AI 只当学习助手。</li>
         <li>AI 生成的作品要标明「AI 生成」。</li>
         <li>和家人约定「家庭暗号」，防范 AI 声音诈骗。</li></ul></div>
-      <div class="box"><h3>徽章与激励</h3><ul>
-        <li>每节课最后一个环节底部可以点亮徽章，徽章只保存在当前电脑的浏览器里。</li>
-        <li>可配合实体贴纸：每点亮一枚，在「舰队护照」上贴一颗星。</li>
-        <li>12 枚全部点亮，结营时颁发「AI 驾驶员证书」。</li></ul></div>
+      <div class="box"><h3>徽章怎么拿</h3><ul>
+        <li>每节课最后一个环节的底部可以点亮徽章，徽章保存在当前电脑的浏览器里。</li>
+        <li>每点亮一枚，就在「舰队护照」上贴一颗星。</li>
+        <li>12 枚全部点亮，就能拿到「AI 驾驶员证书」。</li></ul></div>
       <div class="box"><h3>GESP 一级考试信息</h3><ul>
         <li>单选 10 题 × 3 分，判断 5 题 × 4 分，编程 2 题 × 25 分，满分 100，考试 120 分钟。</li>
         <li>考核：工具操作、角色和背景的属性与动效、带简单控制结构的完整作品、初级计算思维。</li>
