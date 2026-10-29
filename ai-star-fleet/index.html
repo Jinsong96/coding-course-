@@ -198,6 +198,9 @@ td a:hover { color: var(--amber); }
 .check[aria-pressed="true"] { background: color-mix(in srgb, var(--good) 12%, var(--panel)); }
 .check[aria-pressed="true"] .box2 { background: var(--good); border-color: var(--good); color: #0A0E22; }
 .check[aria-pressed="true"] .txt { color: var(--dim); }
+.checks .stagehead { font-family: var(--f-display); font-size: 20px; color: var(--sc, var(--good)); padding: 14px 4px 2px; display: flex; align-items: center; gap: 10px; }
+.checks .stagehead:first-child { padding-top: 0; }
+.checks .stagehead::after { content: ""; flex: 1; height: 2px; background: var(--line); border-radius: 2px; }
 .meter { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 14px; color: var(--dim); }
 .meter .bar { flex: 1; height: 10px; border-radius: 999px; background: var(--panel); overflow: hidden; }
 .meter .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--good), var(--cyan)); border-radius: 999px; transition: width .4s cubic-bezier(.34, 1.56, .64, 1); }
@@ -426,7 +429,7 @@ function burst(el, n = 18) {
 // 积木脚本渲染：每行 "类别|文字"，两空格一层嵌套，"---" 分隔脚本
 function blockText(t) {
   let h = esc(t);
-  h = h.replace(/&lt;(.+?)&gt;(?=\s|$| 那么)/g, '<span class="hex">$1</span>');
+  h = h.replace(/&lt;(.+)&gt;(?= 那么|$)/, '<span class="hex">$1</span>');
   h = h.replace(/\(([^()]+)\)/g, '<span class="rep">$1</span>');
   return h;
 }
@@ -657,7 +660,7 @@ const RENDER = {
     </div>`,
   project: l => `<div class="stack-v">
       <div class="box"><span class="lbl">任务目标</span><p style="font-size:18px">${l.project.goal}</p></div>
-      <div class="box"><span class="lbl">任务清单 · 完成一步点一下</span>${checksHTML(l.project.steps, "proj", true)}</div>
+      <div class="box"><span class="lbl">任务清单 · ${l.project.steps.filter(t => t.startsWith("#")).length || 1} 关 · 完成一步点一下</span>${checksHTML(l.project.steps, "proj", true)}</div>
       <details class="hint"><summary>${I.chev}卡住了？看看参考程序</summary><div>${renderScripts(l.project.code)}</div></details>
       <div><span class="lbl">加分挑战</span><div class="caps">${l.project.levelup.map(t => `<div class="cap" style="--sc:var(--amber)">${t}</div>`).join("")}</div></div>
     </div>`,
@@ -679,9 +682,14 @@ const BIND = {
   quiz: (stage, l) => runQuiz(l)
 };
 
+// 以 "#" 开头的条目是关卡标题，其余是可打勾的步骤
 function checksHTML(items, key, meter) {
-  return `${meter ? `<div class="meter"><span class="bar"><i></i></span><span class="cnt">0 / ${items.length}</span></div>` : ""}
-    <ol class="checks">${items.map((t, i) => `<li><button class="check" aria-pressed="false"><span class="box2">${i + 1}</span><span class="txt">${t}</span></button></li>`).join("")}</ol>`;
+  const total = items.filter(t => !t.startsWith("#")).length;
+  let n = 0;
+  return `${meter ? `<div class="meter"><span class="bar"><i></i></span><span class="cnt">0 / ${total}</span></div>` : ""}
+    <ol class="checks">${items.map(t => t.startsWith("#")
+      ? `<li class="stagehead">${t.slice(1)}</li>`
+      : `<li><button class="check" aria-pressed="false" data-n="${++n}"><span class="box2">${n}</span><span class="txt">${t}</span></button></li>`).join("")}</ol>`;
 }
 function bindChecks(stage) {
   stage.querySelectorAll(".checks").forEach(list => {
@@ -695,7 +703,7 @@ function bindChecks(stage) {
     btns.forEach((b, i) => b.addEventListener("click", () => {
       const on = b.getAttribute("aria-pressed") !== "true";
       b.setAttribute("aria-pressed", on);
-      b.querySelector(".box2").textContent = on ? "✓" : i + 1;
+      b.querySelector(".box2").textContent = on ? "✓" : b.dataset.n;
       if (upd() === btns.length && on) burst(box.querySelector(".meter") || b, 24);
     }));
   });
