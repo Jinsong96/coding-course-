@@ -266,6 +266,14 @@ details.hint > summary::-webkit-details-marker { display: none; }
 details.hint[open] > summary { border-bottom: 2px dashed var(--line); }
 details.hint > div { padding: 16px; display: grid; gap: 14px; }
 .req { white-space: pre-line; }
+.ctitle { font-family: var(--f-display); font-size: 26px; margin-bottom: 6px; }
+.cintro { color: var(--dim); margin-bottom: 14px; }
+.creq { background: var(--panel); border-radius: var(--r-md); padding: 14px 18px; display: grid; gap: 6px; }
+.creq b { color: var(--amber); font-size: 15px; }
+.creq ol { margin: 0 0 6px; padding-left: 1.4em; display: grid; gap: 6px; }
+.creq li::marker { font-family: var(--f-mono); color: var(--faint); }
+.sprite { border: 2px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; margin-top: 12px; }
+.sname { display: inline-block; font-size: 14px; font-weight: 700; background: var(--raise); border-radius: 999px; padding: 2px 12px; margin-bottom: 10px; }
 .score-list { margin: 0; padding-left: 1.2em; font-size: 15px; display: grid; gap: 4px; }
 
 /* Scratch 积木 */
@@ -435,9 +443,17 @@ function blockText(t) {
 }
 function renderScripts(src) {
   if (!src) return "";
-  const out = src.split(/\n---\n/).map(script => {
+  // "@角色名" 行开始一个新角色，之后的脚本都归到这个角色下
+  const groups = [];
+  src.split(/\n---\n/).forEach(script => {
+    const lines = script.split("\n");
+    if (lines[0].startsWith("@")) groups.push({ name: lines.shift().slice(1), scripts: [] });
+    else if (!groups.length) groups.push({ name: "", scripts: [] });
+    groups[groups.length - 1].scripts.push(lines);
+  });
+  const stackHTML = lines => {
     const root = { kids: [] }, stack = [{ depth: -1, node: root }];
-    script.split("\n").forEach(raw => {
+    lines.forEach(raw => {
       const depth = (raw.match(/^ */)[0].length) / 2;
       const [cat, ...rest] = raw.trim().split("|");
       const node = { cat, text: rest.join("|"), kids: [] };
@@ -449,8 +465,25 @@ function renderScripts(src) {
       ? `<div class="cwrap" style="--b:var(--b${n.cat})"><div class="blk ${n.cat}">${blockText(n.text)}</div><div class="inner">${n.kids.map(draw).join("")}</div><div class="cap"></div></div>`
       : `<div class="blk ${n.cat}">${blockText(n.text)}</div>`;
     return `<div class="stack">${root.kids.map(draw).join("")}</div>`;
-  });
-  return `<div class="legend"><span style="--b:var(--bE)">事件</span><span style="--b:var(--bM)">运动</span><span style="--b:var(--bL)">外观</span><span style="--b:var(--bS)">声音</span><span style="--b:var(--bC)">控制</span><span style="--b:var(--bD)">侦测</span><span style="--b:var(--bO)">运算</span><span style="--b:var(--bX)">扩展</span></div><div class="scripts">${out.join("")}</div>`;
+  };
+  const body = groups.map(g => g.name
+    ? `<div class="sprite"><span class="sname">${esc(g.name)}</span><div class="scripts">${g.scripts.map(stackHTML).join("")}</div></div>`
+    : `<div class="scripts">${g.scripts.map(stackHTML).join("")}</div>`).join("");
+  return `<div class="legend"><span style="--b:var(--bE)">事件</span><span style="--b:var(--bM)">运动</span><span style="--b:var(--bL)">外观</span><span style="--b:var(--bS)">声音</span><span style="--b:var(--bC)">控制</span><span style="--b:var(--bD)">侦测</span><span style="--b:var(--bO)">运算</span><span style="--b:var(--bX)">扩展</span></div>${body}`;
+}
+
+// 编程大题：题目 + 准备工作 + 功能实现，答案（思路、参考程序、评分）默认收起
+function codingHTML(c, label) {
+  return `<span class="lbl">${label}</span>
+    <h3 class="ctitle">${c.title}</h3>
+    <p class="cintro">${c.intro}</p>
+    <div class="creq"><b>准备工作</b><ol>${c.prep.map(t => `<li>${t}</li>`).join("")}</ol>
+      <b>功能实现</b><ol>${c.req.map(t => `<li>${t}</li>`).join("")}</ol></div>
+    <details class="hint" style="margin-top:14px"><summary>${I.chev}查看完整答案：解题思路 · 参考程序 · 评分标准</summary><div>
+      <div><span class="lbl">解题思路</span><ol class="know">${c.explain.map(t => `<li><span>${t}</span></li>`).join("")}</ol></div>
+      <div><span class="lbl">参考程序</span>${renderScripts(c.code)}</div>
+      <div><span class="lbl">评分标准 · 共 25 分</span><ul class="score-list">${c.score.map(s => `<li>${s}</li>`).join("")}</ul></div>
+    </div></details>`;
 }
 
 // ---------- 题目 ----------
@@ -649,7 +682,7 @@ const RENDER = {
       <div><span class="lbl">知识胶囊</span><div class="caps">${l.ai.know.map((t, i) => `<div class="cap" style="--sc:${["var(--cyan)", "var(--amber)", "var(--good)", "#B79CFF"][i % 4]}">${t}</div>`).join("")}</div></div>
       <div class="box"><span class="lbl">动手玩一玩</span>${checksHTML(l.ai.steps, "ai")}</div>
       <div class="box"><span class="lbl">小星考考你</span>${qHTML(l.ai.poll, { kind: false })}</div>
-      ${(l.ai.tools.length || l.ai.safety) ? `<details class="hint"><summary>${I.chev}装备与安全提示</summary><div class="teacher">
+      ${(l.ai.tools.length || l.ai.safety) ? `<details class="hint"><summary>${I.chev}需要用到的工具</summary><div class="teacher">
         ${l.ai.tools.map(t => `<div><a href="${t.url}" target="_blank" rel="noopener">${t.name}</a><br>${t.note}</div>`).join("")}
         ${l.ai.safety ? `<div class="warn">${I.warn}<span>${l.ai.safety}</span></div>` : ""}</div></details>` : ""}
     </div>`,
@@ -665,8 +698,7 @@ const RENDER = {
       <div><span class="lbl">加分挑战</span><div class="caps">${l.project.levelup.map(t => `<div class="cap" style="--sc:var(--amber)">${t}</div>`).join("")}</div></div>
     </div>`,
   quiz: l => `<div class="box" id="runner"></div>
-    <div class="box" style="margin-top:16px"><span class="lbl">编程小题 · 25 分</span><p class="req" style="font-size:17px">${esc(l.coding.q)}</p>
-      <details class="hint" style="margin-top:14px"><summary>${I.chev}做完了？对照参考程序和评分标准</summary><div>${renderScripts(l.coding.code)}<div><span class="lbl">评分标准</span><ul class="score-list">${l.coding.score.map(s => `<li>${s}</li>`).join("")}</ul></div></div></details></div>`,
+    <div class="box" style="margin-top:16px">${codingHTML(l.coding, "编程大题 · 25 分 · 建议用时 25 分钟")}</div>`,
   exam: () => `<div class="stack-v"><div class="box"><span class="lbl">怎么考</span><ol class="know">
       <li><span>前 15 分钟：在「模拟考」页完成 10 道单选题和 5 道判断题，交卷后自动判分。</span></li>
       <li><span>后 35 分钟：完成编程题第 1 题「小鱼巡游」，对照评分标准给自己打分。</span></li>
@@ -779,8 +811,7 @@ function viewExam() {
     <h2 class="examsec">二、判断题 <small>5 题 · 每题 4 分</small></h2>
     <div class="stack-v">${EXAM.tf.map((q, i) => `<div class="qcard">${qHTML(q, { num: i + 1 })}</div>`).join("")}</div>
     <h2 class="examsec">三、编程题 <small>2 题 · 每题 25 分</small></h2>
-    <div class="stack-v">${EXAM.coding.map((c, i) => `<div class="box"><span class="lbl">编程 ${i + 1} · ${c.title}</span><p class="req">${esc(c.q)}</p>
-      <details class="hint" style="margin-top:14px"><summary>${I.chev}参考程序与评分标准</summary><div>${renderScripts(c.code)}<div><span class="lbl">评分标准</span><ul class="score-list">${c.score.map(s => `<li>${s}</li>`).join("")}</ul></div></div></details>
+    <div class="stack-v">${EXAM.coding.map((c, i) => `<div class="box">${codingHTML(c, `编程 ${i + 1} · 25 分`)}
       <div class="selfscore"><label for="self${i}">自评得分</label><input id="self${i}" type="number" inputmode="numeric" min="0" max="25" value="0"><span>/ 25</span></div></div>`).join("")}</div>
     <div class="box" style="margin-top:24px" id="totalbox"><div class="total"><span class="lbl" style="margin:0">总分</span><span class="big" id="total">--</span><span style="color:var(--dim);font-size:15px" id="totalnote">先交卷，再填写编程题自评</span></div></div>
     </div>`;
