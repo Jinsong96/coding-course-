@@ -33,3 +33,9 @@ python3 -m http.server 8765 --directory ai-star-fleet
 ```
 
 然后在浏览器访问 http://localhost:8765 。
+
+## 在线访问
+
+仓库开启 GitHub Pages（Settings → Pages → Deploy from a branch → `main` / `/ (root)`）后，任何设备都可以通过下面的链接打开：
+
+https://jinsong96.github.io/coding-course-/
